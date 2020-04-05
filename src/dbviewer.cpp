@@ -9,9 +9,13 @@
 #include <wx/statline.h>
 #include <vector>
 
+#include "database_manager.h"
 #include "dbviewer.h"
 #include "dialogs.h"
-#include "database_manager.h"
+
+using std::endl;
+using std::cout;
+
 
 // ----------------------------------------------------------------------
 // MyApp
@@ -126,6 +130,7 @@ MainFrame::MainFrame() : wxFrame(NULL, wxID_ANY, "Database Viewer") {
     // Create `Display` menu
     wxMenu* display_menu = new wxMenu();
     display_menu->Append(DISPLAY_LOG, "&Log Window\tCtrl-L", "Hide or show the log window", true);
+    display_menu->AppendSeparator();
     display_menu->Append(DISPLAY_LAYOUT_TABLE, "Layout &Table\tCtrl-T", "Resize the table to fit panel", false);
     
     // Disable the `Layout table` item
