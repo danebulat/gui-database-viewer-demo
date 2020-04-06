@@ -7,9 +7,9 @@
 
 #include <exception>
 #include <iostream>
+#include <ostream>
 #include <string>
 #include <vector>
-#include <ostream>
 
 using namespace soci;
 using std::cout;

@@ -1,4 +1,5 @@
 #include <wx/wx.h>
+#include <wx/valtext.h>
 
 #include "dbviewer.h"
 #include "dialogs.h"
@@ -16,8 +17,20 @@ wxEND_EVENT_TABLE();
 // Constructor
 // ----------------------------------------------------------------------
 
+wxTextValidator ConnectionDialog::MakeTextValidator(long style, wxString& buffer) {
+
+    // const wchar_t chars[] = { '-', '_' };
+    // wxArrayString include_list( 2, chars );
+    // wxTextValidator text_validator(wxFILTER_ALPHANUMERIC | wxFILTER_INCLUDE_LIST, &m_username_str);
+    // text_validator.SetCharIncludes(wxString("-_"));
+
+    wxTextValidator val(style, &buffer);
+    return val;
+}
+
 ConnectionDialog::ConnectionDialog(wxWindow* parent, const wxString& title)
-    : wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize) {
+    : wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize), 
+      m_username("ルート"), m_password("パスワード"), m_database("データベース") {
 
     wxLogMessage(wxString::Format("Connection dialog created..."));
 
@@ -28,35 +41,35 @@ ConnectionDialog::ConnectionDialog(wxWindow* parent, const wxString& title)
         wxDefaultPosition, wxDefaultSize);
 
     // Username text control
-    m_username = new wxTextCtrl(this, DIALOG_CONNECT_USERNAME_TEXT, 
-        "root", wxDefaultPosition, wxDefaultSize);
-
+    wxTextCtrl* username_ctrl = new wxTextCtrl(this, DIALOG_CONNECT_USERNAME_TEXT, 
+        "root", wxDefaultPosition, wxDefaultSize, 0, MakeTextValidator(wxFILTER_ASCII, m_username));
+    
     // Password label
     wxStaticText* password_label = new wxStaticText(this, wxID_ANY, "Password: ", 
         wxDefaultPosition, wxDefaultSize);
     
-    m_password = new wxTextCtrl(this, DIALOG_CONNECT_PASSWORD_TEXT, 
-        "", wxDefaultPosition, wxDefaultSize, wxTE_PASSWORD);
+    wxTextCtrl* password_ctrl = new wxTextCtrl(this, DIALOG_CONNECT_PASSWORD_TEXT, 
+        "", wxDefaultPosition, wxDefaultSize, wxTE_PASSWORD, MakeTextValidator(wxFILTER_ASCII, m_password));
     
     // Database name label
     wxStaticText* database_label = new wxStaticText(this, wxID_ANY, "Database: ",
         wxDefaultPosition, wxDefaultSize);
     
-    m_database = new wxTextCtrl(this, DIALOG_CONNECT_DATABASE_TEXT, 
-        "classicmodels", wxDefaultPosition, wxDefaultSize);
+    wxTextCtrl* database_ctrl = new wxTextCtrl(this, DIALOG_CONNECT_DATABASE_TEXT, 
+        "classicmodels", wxDefaultPosition, wxDefaultSize, 0, MakeTextValidator(wxFILTER_ASCII, m_database));
     
     top_sizer->AddSpacer(20);
     top_sizer->Add(username_label, wxSizerFlags().Border(wxLEFT | wxRIGHT, 20).Expand());
     top_sizer->AddSpacer(10);
-    top_sizer->Add(m_username, wxSizerFlags().Border(wxLEFT | wxRIGHT, 20).Expand());
+    top_sizer->Add(username_ctrl, wxSizerFlags().Border(wxLEFT | wxRIGHT, 20).Expand());
     top_sizer->AddSpacer(10);
     top_sizer->Add(password_label, wxSizerFlags().Border(wxLEFT | wxRIGHT, 20).Expand());
     top_sizer->AddSpacer(10);
-    top_sizer->Add(m_password, wxSizerFlags().Border(wxLEFT | wxRIGHT, 20).Expand());
+    top_sizer->Add(password_ctrl, wxSizerFlags().Border(wxLEFT | wxRIGHT, 20).Expand());
     top_sizer->AddSpacer(10);
     top_sizer->Add(database_label, wxSizerFlags().Border(wxLEFT | wxRIGHT, 20).Expand());
     top_sizer->AddSpacer(10);
-    top_sizer->Add(m_database, wxSizerFlags().Border(wxLEFT | wxRIGHT, 20).Expand());
+    top_sizer->Add(database_ctrl, wxSizerFlags().Border(wxLEFT | wxRIGHT, 20).Expand());
 
     // Button sizer
     wxBoxSizer* button_sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -86,29 +99,38 @@ ConnectionDialog::ConnectionDialog(wxWindow* parent, const wxString& title)
 // ----------------------------------------------------------------------
 
 void ConnectionDialog::OnConnect(wxCommandEvent& event) {
+
+    // Firstly call wxWindow::Validate, which returns false if any of the child 
+    // window validators failed to validate the window data.
+    // Secondly, call wxWindow::TransferDataFromWindow and return if this failed.
     
-    wxLogMessage(wxString::Format("Attempt connection to database..."));
+    if ( Validate() && TransferDataFromWindow() ) {
 
-    // TODO: Validators (close dialog only if user has entered all information)
+        if ( IsModal() ) {
 
-    // wxLogMessage(wxString::Format("Username: %s\nPassword: %s\nDatabase: %s",
-    //     m_username->GetValue().ToStdString(),
-    //     m_password->GetValue().ToStdString(),
-    //     m_database->GetValue().ToStdString()));
-    
-    // Make database connection
-    MainFrame* parent = static_cast<MainFrame*>(this->m_parent);
-    
-    wxString db_string(m_database->GetValue());
-    wxString un_string(m_username->GetValue());
-    wxString pw_string(m_password->GetValue());
+            // Log message
+            wxLogMessage(wxString::Format("Username from validator: %s", m_username));
 
-    parent->NewDatabaseConnection(
-        db_string,
-        pw_string,
-        un_string);
+            // Make database connection
+            MainFrame* parent = static_cast<MainFrame*>(this->m_parent);
 
-    Close();
+             // Close dialog if connection successful, otherwise display message box
+            if (parent->NewDatabaseConnection(m_database, m_password, m_username)) {
+                EndModal(DIALOG_CONNECT_OK);
+            }
+            else {
+                wxMessageBox(
+                    "Unable to connect to database. Please try again.",
+                    "Unable to Connect",
+                    wxICON_EXCLAMATION, this);
+            }
+        }
+        // Enter if this dialog is non-modal (for demonstration only)
+        else {
+            SetReturnCode(DIALOG_CONNECT_OK);
+            this->Show(false);
+        }
+    }
 }
 
 void ConnectionDialog::OnCancel(wxCommandEvent& event) {

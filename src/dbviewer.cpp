@@ -107,8 +107,6 @@ void MainFrame::LogMenuEvent(const wxCommandEvent& event) {
 // Constructor
 MainFrame::MainFrame() : wxFrame(NULL, wxID_ANY, "Database Viewer") {
 
-    // TODO: Set icon
-
     // TODO: Initialize data members
     db_manager = new DatabaseManager();
     m_grid = NULL;
@@ -288,7 +286,7 @@ MainFrame::MainFrame() : wxFrame(NULL, wxID_ANY, "Database Viewer") {
     wxLogMessage(wxString::Format("Welcome to the database view application!\n"
                  "Logging is enabled for this application build.\n"));
     
-    m_main_sizer->Add(m_log_textctrl, wxSizerFlags().Expand());
+    m_main_sizer->Add(m_log_textctrl, wxSizerFlags().Border(wxLEFT | wxRIGHT | wxBOTTOM, 2).Expand());
     
 #endif // USE_LOGGING_WINDOW
 
@@ -489,7 +487,7 @@ void MainFrame::OnToggleLogDisplay(wxCommandEvent& event) {
 // MainFrame::NewDatabaseConnection
 // ------------------------------------------------------------
 
-void MainFrame::NewDatabaseConnection(wxString db, wxString pw, wxString user) {
+bool MainFrame::NewDatabaseConnection(wxString db, wxString pw, wxString user) {
 
     wxLogMessage(wxString::Format("MainFrame::NewDatabaseConnection: Entered..."));
 
@@ -560,11 +558,15 @@ void MainFrame::NewDatabaseConnection(wxString db, wxString pw, wxString user) {
             SetSizerAndFit(m_main_sizer);
             SetClientSize(client_size);
             Layout();
+
+            return true;
         }
         else {
             wxLogMessage(wxString::Format("Error: Unable to connect to database. Please try again."));
         }
     }
+
+    return false;
 }
 
 void MainFrame::LoadTableFromDatabase(const string& table_name) {

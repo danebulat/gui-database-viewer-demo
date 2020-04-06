@@ -62,7 +62,7 @@ public:
         return NULL;
     }
 
-    void NewDatabaseConnection(wxString db, wxString pw, wxString user);
+    bool NewDatabaseConnection(wxString db, wxString pw, wxString user);
 
 private:
     void LoadTableFromDatabase(const string& table_name);
