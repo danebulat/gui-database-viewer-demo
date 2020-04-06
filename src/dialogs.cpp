@@ -132,11 +132,14 @@ void ConnectionDialog::OnCancel(wxCommandEvent& event) {
 
 wxTextValidator ConnectionDialog::MakeTextValidator(long style, wxString& buffer) {
 
-    // const wchar_t chars[] = { '-', '_' };
-    // wxArrayString include_list( 2, chars );
-    // wxTextValidator text_validator(wxFILTER_ALPHANUMERIC | wxFILTER_INCLUDE_LIST, &m_username_str);
-    // text_validator.SetCharIncludes(wxString("-_"));
+    /* Alternative validator creation:
 
-    wxTextValidator val(style, &buffer);
-    return val;
+       const wchar_t chars[] = { '-', '_' };
+       wxArrayString include_list( 2, chars );
+       wxTextValidator text_validator(wxFILTER_ALPHANUMERIC | wxFILTER_INCLUDE_LIST, &buffer);
+       text_validator.SetCharIncludes(wxString("-_"));
+    */
+    
+    wxTextValidator validator(style, &buffer);
+    return validator;
 }

@@ -93,7 +93,7 @@ private:
                     *m_no_selection_lbl;
     
 #if USE_LOG_WINDOW
-    wxTextCtrl* m_log_textctrl;
+    wxTextCtrl      *m_log_textctrl;
 #endif
 
     wxDECLARE_EVENT_TABLE();

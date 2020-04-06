@@ -106,11 +106,22 @@ void MyFrame::LogMenuEvent(const wxCommandEvent& event) {
 // ----------------------------------------------------------------------
 
 // Constructor
-MyFrame::MyFrame() : wxFrame(NULL, wxID_ANY, "Database Viewer") {
-
-    // TODO: Initialize data members
+MyFrame::MyFrame() : wxFrame(NULL, wxID_ANY, "Database Viewer"),
+      m_main_sizer(NULL), 
+      m_top_sizer(NULL), 
+      m_stored_proc_sizer(NULL), 
+      m_old_log(NULL), 
+      m_inner_panel(NULL), 
+      m_grid(NULL), 
+      m_table_combo_box(NULL), 
+      m_backend_lbl(NULL), 
+      m_user_lbl(NULL), 
+      m_database_lbl(NULL), 
+      m_no_selection_lbl(NULL), 
+      m_log_textctrl(NULL) {
+          
+    // Instantiate database manager
     db_manager = new DatabaseManager();
-    m_grid = NULL;
 
 #if USE_LOG_WINDOW
     m_log_textctrl = NULL;
@@ -284,7 +295,7 @@ MyFrame::MyFrame() : wxFrame(NULL, wxID_ANY, "Database Viewer") {
     // Set a new active log target
     m_old_log = wxLog::SetActiveTarget(new wxLogTextCtrl(m_log_textctrl));
 
-    wxLogMessage(wxString::Format("Welcome to the database view application!\n"
+    wxLogMessage(wxString::Format("Welcome to the database viewer application!\n"
                  "Logging is enabled for this application build.\n"));
     
     m_main_sizer->Add(m_log_textctrl, wxSizerFlags().Border(wxLEFT | wxRIGHT | wxBOTTOM, 2).Expand());
@@ -429,9 +440,9 @@ void MyFrame::OnDisconnectFromDatabase(wxCommandEvent& WXUNUSED(event)) {
         m_no_selection_lbl->Show(true);
 
         // Layout the updated labels and table
-        wxSize client_size = GetClientSize();
-        SetSizerAndFit(m_main_sizer);
-        SetClientSize(client_size);
+        // wxSize client_size = GetClientSize();
+        // SetSizerAndFit(m_main_sizer);
+        // SetClientSize(client_size);
         Layout();
     }
     else {
@@ -469,8 +480,8 @@ void MyFrame::OnToggleLogDisplay(wxCommandEvent& event) {
         wxLogMessage(wxString::Format("Log panel hidden"));
     }
 
-    wxSize client_size = GetClientSize();
-    SetClientSize(client_size);
+    // wxSize client_size = GetClientSize();
+    // SetClientSize(client_size);
     Layout();
 }
 
@@ -541,9 +552,9 @@ bool MyFrame::NewDatabaseConnection(wxString db, wxString pw, wxString user) {
             LoadTableFromDatabase(table_names[0]);
 
             // Layout the updated labels and table
-            wxSize client_size = GetClientSize();
-            SetSizerAndFit(m_main_sizer);
-            SetClientSize(client_size);
+            // wxSize client_size = GetClientSize();
+            // SetSizerAndFit(m_main_sizer);
+            // SetClientSize(client_size);
             Layout();
 
             return true;
