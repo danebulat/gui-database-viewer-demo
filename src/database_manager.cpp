@@ -4,6 +4,7 @@
 #include <soci/mysql/soci-mysql.h>
 
 #include <wx/grid.h>
+#include "utils.h"
 
 #include <exception>
 #include <iostream>
@@ -40,12 +41,7 @@ DatabaseManager::~DatabaseManager() {
     cout << "DatabaseManager::~DatabaseManager: Entered..." << endl;
 
     // Delete session
-    if (m_session != NULL) {
-        delete m_session;
-        m_session = NULL;
-
-        cout << "Success: m_session deleted" << endl;
-    }
+    SafeDelete(m_session);
 }
 
 // ----------------------------------------------------------------------
@@ -86,16 +82,7 @@ bool DatabaseManager::DisconnectFromDatabase() {
     cout << "DatabaseManager::DisconnectFromSession: Entered..." << endl;
     
     // Delete session object if exists
-    if (m_session != NULL) {
-        
-        delete m_session;
-        m_session = NULL;
-
-        cout << "DatabaseManager::DisconnectFromSession: m_session deleted..." << endl;
-        return true;
-    }
-
-    return false;
+    return SafeDelete(m_session);
 }
 
 void DatabaseManager::LoadTableData(const string& table_name, wxGrid* grid) {
@@ -129,8 +116,8 @@ void DatabaseManager::LoadTableData(const string& table_name, wxGrid* grid) {
     }
     
     // Fetch rows dynamically
-    // Calling soci::use with session::prepare causes a crash, so construct the 
-    // query string before passing it to session::prepare
+    //     Calling soci::use with session::prepare causes a crash, so construct the 
+    //     query string before passing it to session::prepare
     string query_string = "SELECT * FROM " + table_name;
     rowset<row> rows = ((*m_session).prepare << query_string.c_str());
     
@@ -221,7 +208,7 @@ void DatabaseManager::LoadTableData(const string& table_name, wxGrid* grid) {
                 }
 
                 case i_truncated:
-                    // the value was returned only in part,
+                    // The value was returned only in part,
                     // because the provided buffer was too short
                     // (not possible with std::string, but possible with char* and char[])
                     grid->SetCellValue(row_index, column_index, wxString::Format("TRUNC"));
@@ -238,6 +225,7 @@ void DatabaseManager::LoadTableData(const string& table_name, wxGrid* grid) {
 
 void DatabaseManager::GetTableNames(vector<string>& table_names) {
 
+    // Retrieve the table count in given database
     int count = 0;
     (*m_session) << "SELECT COUNT(table_name) FROM information_schema.tables "
                     "WHERE table_type='BASE TABLE' AND table_schema=:db",
@@ -249,6 +237,7 @@ void DatabaseManager::GetTableNames(vector<string>& table_names) {
     // Important: Resize vector to avoid segmentation fault (11)
     table_names.resize(static_cast<size_t>(count));
 
+    // Retrieve actual table names from database
     (*m_session) << "SELECT table_name FROM information_schema.tables "
                     "WHERE table_type='BASE TABLE' AND table_schema=:db",
                     use(m_database, "db"), into(table_names);
@@ -258,6 +247,7 @@ void DatabaseManager::GetTableNames(vector<string>& table_names) {
 
 int DatabaseManager::GetStoredProcedures(vector<string>& stored_procedures) {
 
+    // Retrieve the stored procedures count in given database
     int count = 0;
     (*m_session) << "SELECT COUNT(routine_name) FROM information_schema.routines "
                     "WHERE routine_type='PROCEDURE' AND routine_schema=:db",
@@ -268,6 +258,7 @@ int DatabaseManager::GetStoredProcedures(vector<string>& stored_procedures) {
         // Important: Resize vector to avoid segmentation fault (11)
         stored_procedures.resize(static_cast<size_t>(count));
 
+        // Retrieve actual stored procedure names from database
         (*m_session) << "SELECT routine_name FROM information_schema.routines "
                         "WHERE routine_type='PROCEDURE' AND routine_schema=:db",
                         use(m_database, "db"), into(stored_procedures);

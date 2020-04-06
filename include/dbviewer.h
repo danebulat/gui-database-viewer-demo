@@ -16,6 +16,7 @@
     #define USE_LOG_WINDOW 0
 #endif
 
+
 // ----------------------------------------------------------------------
 // Define a new application
 // ----------------------------------------------------------------------
@@ -30,11 +31,11 @@ public:
 // The main frame class
 // ----------------------------------------------------------------------
 
-class MainFrame : public wxFrame {
+class MyFrame : public wxFrame {
 public:
     // Constructor
-    MainFrame();
-    ~MainFrame();
+    MyFrame();
+    ~MyFrame();
 
     // Event handlers
     void OnAbout(wxCommandEvent& event);
@@ -55,6 +56,7 @@ public:
     // Logging methods
     void LogMenuEvent(const wxCommandEvent& event);
 
+    // TODO: Call this getter
     DatabaseManager* GetDatabaseManager() {
         if (db_manager != NULL)
             return db_manager;
@@ -62,6 +64,7 @@ public:
         return NULL;
     }
 
+public:
     bool NewDatabaseConnection(wxString db, wxString pw, wxString user);
 
 private:
@@ -81,7 +84,7 @@ private:
  
     // Left Panel Controls 
     wxComboBox      *m_table_combo_box;
- 
+    
     // Labels 
     wxStaticText    *m_backend_lbl,
                     *m_user_lbl,
@@ -101,12 +104,12 @@ private:
 // ----------------------------------------------------------------------
 class MyEvtHandler : public wxEvtHandler {
 public:
-    MyEvtHandler(MainFrame* frame);
+    MyEvtHandler(MyFrame* frame);
 
     void OnMenuEvent(wxCommandEvent& event);
 
 private:
-    MainFrame* m_frame;
+    MyFrame* m_frame;
 
     wxDECLARE_EVENT_TABLE();
 };

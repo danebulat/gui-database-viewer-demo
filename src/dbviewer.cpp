@@ -9,9 +9,10 @@
 #include <wx/statline.h>
 #include <vector>
 
-#include "database_manager.h"
 #include "dbviewer.h"
+#include "database_manager.h"
 #include "dialogs.h"
+#include "utils.h"
 
 using std::endl;
 using std::cout;
@@ -33,7 +34,7 @@ bool MyApp::OnInit() {
 	wxTheApp->SetAppName(wxT("Database Viewer"));
 
     // Create the main frame window
-    MainFrame* frame = new MainFrame();
+    MyFrame* frame = new MyFrame();
     frame->Show(true);
 
     return true;
@@ -43,21 +44,21 @@ bool MyApp::OnInit() {
 // Event tables
 // ----------------------------------------------------------------------
 
-wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
+wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
 
     // Menu bar events
-    EVT_MENU(FRAME_ABOUT, MainFrame::OnAbout)
-    EVT_MENU(FRAME_EXIT, MainFrame::OnExit)
-    EVT_SIZE(MainFrame::OnSize)
+    EVT_MENU(FRAME_ABOUT, MyFrame::OnAbout)
+    EVT_MENU(FRAME_EXIT, MyFrame::OnExit)
+    EVT_SIZE(MyFrame::OnSize)
 
-    EVT_MENU(DISPLAY_LOG, MainFrame::OnToggleLogDisplay)
-    EVT_MENU(DISPLAY_LAYOUT_TABLE, MainFrame::OnLayoutTable)
+    EVT_MENU(DISPLAY_LOG, MyFrame::OnToggleLogDisplay)
+    EVT_MENU(DISPLAY_LAYOUT_TABLE, MyFrame::OnLayoutTable)
 
-    EVT_MENU(FILE_CONNECT, MainFrame::OnConnectToDatabase)
-    EVT_MENU(FILE_DISCONNECT, MainFrame::OnDisconnectFromDatabase)
+    EVT_MENU(FILE_CONNECT, MyFrame::OnConnectToDatabase)
+    EVT_MENU(FILE_DISCONNECT, MyFrame::OnDisconnectFromDatabase)
 
     // Left panel events
-    EVT_COMBOBOX(FRAME_COMBOBOX, MainFrame::OnTableSelect)
+    EVT_COMBOBOX(FRAME_COMBOBOX, MyFrame::OnTableSelect)
 
 wxEND_EVENT_TABLE();
 
@@ -69,18 +70,18 @@ wxEND_EVENT_TABLE();
 // MyEvtHandler
 // ----------------------------------------------------------------------
 
-MyEvtHandler::MyEvtHandler(MainFrame* frame) : m_frame(frame) {}
+MyEvtHandler::MyEvtHandler(MyFrame* frame) : m_frame(frame) {}
 
 void MyEvtHandler::OnMenuEvent(wxCommandEvent& event) {
     
     // Pass event to custom log function
     m_frame->LogMenuEvent(event);
 
-    // Skip event so it's wxWindow (MainFrame) can handle it
+    // Skip event so it's wxWindow (MyFrame) can handle it
     event.Skip();
 }
 
-void MainFrame::LogMenuEvent(const wxCommandEvent& event) {
+void MyFrame::LogMenuEvent(const wxCommandEvent& event) {
 
     // Get event's ID to uniquely identify the item
     int id = event.GetId();
@@ -101,11 +102,11 @@ void MainFrame::LogMenuEvent(const wxCommandEvent& event) {
 }
 
 // ----------------------------------------------------------------------
-// MainFrame
+// MyFrame
 // ----------------------------------------------------------------------
 
 // Constructor
-MainFrame::MainFrame() : wxFrame(NULL, wxID_ANY, "Database Viewer") {
+MyFrame::MyFrame() : wxFrame(NULL, wxID_ANY, "Database Viewer") {
 
     // TODO: Initialize data members
     db_manager = new DatabaseManager();
@@ -305,17 +306,10 @@ MainFrame::MainFrame() : wxFrame(NULL, wxID_ANY, "Database Viewer") {
     Show();
 }
 
-MainFrame::~MainFrame() {
-
-    // Delete database manager
-    if (db_manager != NULL) {
-        cout << "MainFrame::~MainFrame: deleteing db_manager..." << endl;
-
-        delete db_manager;
-        db_manager = NULL;
-    }
+MyFrame::~MyFrame() {
     
-    // TODO: Delete data members
+    // De-allocate objects not maanged by wxWidgets
+    SafeDelete(db_manager);    
 
     // Delete the event handler installed in the constructor
     PopEventHandler(true);
@@ -326,11 +320,11 @@ MainFrame::~MainFrame() {
 #endif
 }
 
-void MainFrame::OnExit(wxCommandEvent& WXUNUSED(event)) {
+void MyFrame::OnExit(wxCommandEvent& WXUNUSED(event)) {
     Close(true);
 }
 
-void MainFrame::OnAbout(wxCommandEvent& WXUNUSED(event)) {
+void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event)) {
 
     (void)wxMessageBox(
         "Connect to and view database tables.", 
@@ -338,16 +332,16 @@ void MainFrame::OnAbout(wxCommandEvent& WXUNUSED(event)) {
         wxOK | wxICON_INFORMATION);
 }
 
-void MainFrame::OnSize(wxSizeEvent& event){
+void MyFrame::OnSize(wxSizeEvent& event){
 
     Layout();
         
     wxLogMessage(wxString::Format("Window resized..."));
 }
 
-void MainFrame::OnLayoutTable(wxCommandEvent& WXUNUSED(event)) {
+void MyFrame::OnLayoutTable(wxCommandEvent& WXUNUSED(event)) {
     
-    wxLogMessage(wxString::Format("Calling: MainFrame::OnLayoutTable"));
+    wxLogMessage(wxString::Format("Calling: MyFrame::OnLayoutTable"));
 
     int inner_panel_width = m_inner_panel->GetClientSize().GetWidth();
     int client_width = GetClientSize().GetWidth();
@@ -390,14 +384,14 @@ void MainFrame::OnLayoutTable(wxCommandEvent& WXUNUSED(event)) {
     }
 }
 
-void MainFrame::OnConnectToDatabase(wxCommandEvent& WXUNUSED(event)) {
+void MyFrame::OnConnectToDatabase(wxCommandEvent& WXUNUSED(event)) {
 
     ConnectionDialog dialog(this, "Connect to MySQL Database");
 
     dialog.ShowModal();
 }
 
-void MainFrame::OnDisconnectFromDatabase(wxCommandEvent& WXUNUSED(event)) {
+void MyFrame::OnDisconnectFromDatabase(wxCommandEvent& WXUNUSED(event)) {
     
     // Delete m_session in databas manager
     if (db_manager->DisconnectFromDatabase()) {
@@ -443,14 +437,11 @@ void MainFrame::OnDisconnectFromDatabase(wxCommandEvent& WXUNUSED(event)) {
     else {
         wxLogMessage(wxString::Format("Error: Unable to disconnect from database."));
     }
-
-    // (void)wxMessageBox("Disconnected from database successfully.", "Disconnect from Database", 
-    //     wxOK | wxICON_INFORMATION);
 }
 
-void MainFrame::OnTableSelect(wxCommandEvent& event) {
+void MyFrame::OnTableSelect(wxCommandEvent& event) {
 
-    wxLogMessage(wxString::Format("Calling: MainFrame::OnTableSelect"));
+    wxLogMessage(wxString::Format("Calling: MyFrame::OnTableSelect"));
 
     int index = m_table_combo_box->GetSelection();
 
@@ -467,7 +458,7 @@ void MainFrame::OnTableSelect(wxCommandEvent& event) {
     }
 }
 
-void MainFrame::OnToggleLogDisplay(wxCommandEvent& event) {
+void MyFrame::OnToggleLogDisplay(wxCommandEvent& event) {
 
     if (event.IsChecked()) {
         m_log_textctrl->Show(true);
@@ -484,12 +475,12 @@ void MainFrame::OnToggleLogDisplay(wxCommandEvent& event) {
 }
 
 // ------------------------------------------------------------
-// MainFrame::NewDatabaseConnection
+// MyFrame::NewDatabaseConnection
 // ------------------------------------------------------------
 
-bool MainFrame::NewDatabaseConnection(wxString db, wxString pw, wxString user) {
+bool MyFrame::NewDatabaseConnection(wxString db, wxString pw, wxString user) {
 
-    wxLogMessage(wxString::Format("MainFrame::NewDatabaseConnection: Entered..."));
+    wxLogMessage(wxString::Format("MyFrame::NewDatabaseConnection: Entered..."));
 
     // Instantiate database manager
     if (db_manager != NULL) {
@@ -499,8 +490,6 @@ bool MainFrame::NewDatabaseConnection(wxString db, wxString pw, wxString user) {
             user.ToStdString(),
             pw.ToStdString()
         );
-
-        //wxLogMessage(wxString::Format("Good connection: %i", good_connection));
 
         // Handle connection result
         if (good_connection) {
@@ -521,8 +510,6 @@ bool MainFrame::NewDatabaseConnection(wxString db, wxString pw, wxString user) {
             //cout << "Getting table names..." << endl;
             std::vector<std::string> table_names;
             db_manager->GetTableNames(table_names);
-
-            //cout << "Setting up choices string array..." << endl;
 
             wxArrayString choices;
             for (int i = 0; i < table_names.size(); ++i) {
@@ -569,7 +556,7 @@ bool MainFrame::NewDatabaseConnection(wxString db, wxString pw, wxString user) {
     return false;
 }
 
-void MainFrame::LoadTableFromDatabase(const string& table_name) {
+void MyFrame::LoadTableFromDatabase(const string& table_name) {
 
     m_no_selection_lbl->Show(false);
 
@@ -581,9 +568,10 @@ void MainFrame::LoadTableFromDatabase(const string& table_name) {
 
     m_grid = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxSize(400, 200));
 
+    // Load table data into grid
     db_manager->LoadTableData(table_name, m_grid);
 
+    // Layout controls
     m_top_sizer->Add(m_grid, 3, wxGROW|wxALL, 2);
-
     Layout();
 }

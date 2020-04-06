@@ -16,9 +16,9 @@ private:
     void OnConnect(wxCommandEvent& event);
     void OnCancel(wxCommandEvent& event);
 
-    wxString    m_username,
-                m_password,
-                m_database;
+    wxString m_username,
+             m_password,
+             m_database;
     
     wxDECLARE_EVENT_TABLE();
 };

@@ -17,20 +17,9 @@ wxEND_EVENT_TABLE();
 // Constructor
 // ----------------------------------------------------------------------
 
-wxTextValidator ConnectionDialog::MakeTextValidator(long style, wxString& buffer) {
-
-    // const wchar_t chars[] = { '-', '_' };
-    // wxArrayString include_list( 2, chars );
-    // wxTextValidator text_validator(wxFILTER_ALPHANUMERIC | wxFILTER_INCLUDE_LIST, &m_username_str);
-    // text_validator.SetCharIncludes(wxString("-_"));
-
-    wxTextValidator val(style, &buffer);
-    return val;
-}
-
 ConnectionDialog::ConnectionDialog(wxWindow* parent, const wxString& title)
     : wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize), 
-      m_username("ルート"), m_password("パスワード"), m_database("データベース") {
+      m_username("root"), m_password(""), m_database("") {
 
     wxLogMessage(wxString::Format("Connection dialog created..."));
 
@@ -42,21 +31,21 @@ ConnectionDialog::ConnectionDialog(wxWindow* parent, const wxString& title)
 
     // Username text control
     wxTextCtrl* username_ctrl = new wxTextCtrl(this, DIALOG_CONNECT_USERNAME_TEXT, 
-        "root", wxDefaultPosition, wxDefaultSize, 0, MakeTextValidator(wxFILTER_ASCII, m_username));
+        wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, MakeTextValidator(wxFILTER_ASCII, m_username));
     
     // Password label
     wxStaticText* password_label = new wxStaticText(this, wxID_ANY, "Password: ", 
         wxDefaultPosition, wxDefaultSize);
     
     wxTextCtrl* password_ctrl = new wxTextCtrl(this, DIALOG_CONNECT_PASSWORD_TEXT, 
-        "", wxDefaultPosition, wxDefaultSize, wxTE_PASSWORD, MakeTextValidator(wxFILTER_ASCII, m_password));
+        wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PASSWORD, MakeTextValidator(wxFILTER_ASCII, m_password));
     
     // Database name label
     wxStaticText* database_label = new wxStaticText(this, wxID_ANY, "Database: ",
         wxDefaultPosition, wxDefaultSize);
     
     wxTextCtrl* database_ctrl = new wxTextCtrl(this, DIALOG_CONNECT_DATABASE_TEXT, 
-        "classicmodels", wxDefaultPosition, wxDefaultSize, 0, MakeTextValidator(wxFILTER_ASCII, m_database));
+        wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, MakeTextValidator(wxFILTER_ASCII, m_database));
     
     top_sizer->AddSpacer(20);
     top_sizer->Add(username_label, wxSizerFlags().Border(wxLEFT | wxRIGHT, 20).Expand());
@@ -112,14 +101,14 @@ void ConnectionDialog::OnConnect(wxCommandEvent& event) {
             wxLogMessage(wxString::Format("Username from validator: %s", m_username));
 
             // Make database connection
-            MainFrame* parent = static_cast<MainFrame*>(this->m_parent);
+            MyFrame* parent = static_cast<MyFrame*>(this->m_parent);
 
              // Close dialog if connection successful, otherwise display message box
             if (parent->NewDatabaseConnection(m_database, m_password, m_username)) {
                 EndModal(DIALOG_CONNECT_OK);
             }
             else {
-                wxMessageBox(
+                (void)wxMessageBox(
                     "Unable to connect to database. Please try again.",
                     "Unable to Connect",
                     wxICON_EXCLAMATION, this);
@@ -135,4 +124,19 @@ void ConnectionDialog::OnConnect(wxCommandEvent& event) {
 
 void ConnectionDialog::OnCancel(wxCommandEvent& event) {
     Close();
+}
+
+// ----------------------------------------------------------------------
+// Utilities
+// ----------------------------------------------------------------------
+
+wxTextValidator ConnectionDialog::MakeTextValidator(long style, wxString& buffer) {
+
+    // const wchar_t chars[] = { '-', '_' };
+    // wxArrayString include_list( 2, chars );
+    // wxTextValidator text_validator(wxFILTER_ALPHANUMERIC | wxFILTER_INCLUDE_LIST, &m_username_str);
+    // text_validator.SetCharIncludes(wxString("-_"));
+
+    wxTextValidator val(style, &buffer);
+    return val;
 }
